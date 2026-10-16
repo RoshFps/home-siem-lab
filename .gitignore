@@ -1,0 +1,7 @@
+.env
+*.pass
+*.tar
+wazuh/config/certs/
+wazuh/config/wazuh_indexer/internal_users.yml
+wazuh/secrets/
+pfsense/*.xml

@@ -1,0 +1,34 @@
+# web01 (10.0.2.20, DMZ): Nginx plus a Wazuh agent sidecar that reads Nginx's logs.
+# Scale out by adding more web services that mount the same style of log volume
+# (see docs/SCALING.md), or by running this file on more DMZ VMs.
+name: web01
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    mem_limit: 128m
+    ports:
+      - "80:80"
+    volumes:
+      - ./site:/usr/share/nginx/html:ro
+      - nginx-logs:/var/log/nginx
+    read_only: true
+    tmpfs: [/var/cache/nginx, /var/run, /tmp]
+    security_opt: ["no-new-privileges:true"]
+
+  wazuh-agent:
+    build: ./agent
+    restart: unless-stopped
+    mem_limit: 384m
+    environment:
+      WAZUH_MANAGER: ${WAZUH_MANAGER:-10.0.1.10}
+      WAZUH_REGISTRATION_PASSWORD: ${ENROLL_PASSWORD:?set in .env}
+      WAZUH_AGENT_NAME: ${WAZUH_AGENT_NAME:-web01}
+    volumes:
+      - nginx-logs:/var/log/nginx:ro
+      - agent-state:/var/ossec/etc
+    depends_on: [nginx]
+
+volumes:
+  nginx-logs:
+  agent-state:
