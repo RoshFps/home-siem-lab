@@ -13,6 +13,16 @@ The IPs, firewall rules and retention (30 days searchable, 365 days gzipped arch
 
 ## Quick start
 
+Full ordered steps (VMware, pfSense, VMs, laptop) are in [docs/RUNBOOK.md](docs/RUNBOOK.md). The short version:
+
+```bash
+scripts/bootstrap-wazuh01.sh            # on wazuh01: Docker, random passwords, preflight, stack up
+scripts/bootstrap-web01.sh '<enroll pw>' # on web01: Docker, Nginx + agent
+scripts/smoke-test.sh                    # on wazuh01: dashboard and agents check
+```
+
+Manual equivalent:
+
 ```bash
 # on wazuh01 (Ubuntu 24.04 with Docker Engine + compose plugin)
 cd wazuh && cp .env.example .env     # fill in the passwords
@@ -29,11 +39,11 @@ Then follow the pfSense and laptop steps in `docs/`. `scripts/vm-install/` keeps
 
 * `wazuh/`: single-node Wazuh compose (from wazuh/wazuh-docker v4.14.9, GPLv2), resource limits, syslog input, enrollment password.
 * `web01/`: Nginx and an agent sidecar that tails Nginx logs.
-* `scripts/`: `up-wazuh.sh`, `render-users.sh`, and `vm-install/` (VM scripts).
+* `scripts/`: `bootstrap-*.sh`, `preflight.sh`, `smoke-test.sh`, `up-wazuh.sh`, `render-users.sh`, and `vm-install/` (VM scripts).
 * `docs/SCALING.md`: RAM budget and how the lab grows.
 * `pfsense/`, `results/`: sanitized pfSense config and attack-test results (added later).
 * `.github/workflows/ci.yml`: shellcheck, yamllint, `docker compose config`, agent image build, secret scan.
 
 Nothing secret lives in the repo: `.env`, certificates, rendered user hashes and pfSense XML are git-ignored.
 
-Status: the compose files validate (`docker compose config`); a full run on the lab VMs is still to be done (Jira SIEM 5.x).
+Status: the compose files, scripts (shellcheck) and CI validate; a full run on the lab VMs is still to be done (Jira SIEM 5.2 and 5.3).

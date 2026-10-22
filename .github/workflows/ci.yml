@@ -14,8 +14,9 @@ jobs:
       - name: compose files validate
         run: |
           sed 's/^\(INDEXER_PASSWORD\|DASHBOARD_PASSWORD\|API_PASSWORD\|ENROLL_PASSWORD\)=.*/\1=ci-placeholder/' wazuh/.env.example > ci.env
+          sed "s/^ENROLL_PASSWORD=.*/ENROLL_PASSWORD=ci-placeholder/" web01/.env.example > ci-web.env
           docker compose -f wazuh/docker-compose.yml --env-file ci.env config -q
-          docker compose -f web01/docker-compose.yml --env-file ci.env config -q
+          docker compose -f web01/docker-compose.yml --env-file ci-web.env config -q
       - name: build agent image
         run: docker build -t web01-agent web01/agent
   secrets:
