@@ -13,7 +13,7 @@ The IPs, firewall rules and retention (30 days searchable, 365 days gzipped arch
 
 ## Quick start
 
-Full ordered steps (VMware, pfSense, VMs, laptop) are in [docs/RUNBOOK.md](docs/RUNBOOK.md). The short version:
+Full ordered steps are in [docs/RUNBOOK.md](docs/RUNBOOK.md); every setting explained, with hardening and custom options, is in [docs/ADVANCED.md](docs/ADVANCED.md). The short version:
 
 ```bash
 scripts/bootstrap-wazuh01.sh            # on wazuh01: Docker, random passwords, preflight, stack up
