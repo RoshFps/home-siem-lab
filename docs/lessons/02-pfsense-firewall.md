@@ -24,7 +24,7 @@ Why it matters for the job: firewall rule design and log review are core daily t
 3. Boot the pfSense ISO, accept the license, choose **Install**, then the defaults (ZFS, single disk). Reboot and remove the ISO.
 4. At the console menu choose **1) Assign interfaces**. No VLANs. WAN = NAT adapter, LAN = VMnet4 adapter, OPT1 = VMnet2, OPT2 = VMnet3. Compare each MAC with VM Settings > adapter > Advanced.
 5. Choose **2) Set interface IP address**: LAN 10.0.3.1/24, OPT1 10.0.1.1/24, OPT2 10.0.2.1/24. Answer **no** to DHCP and no upstream gateway on those three. Why: only WAN has a way out; internal interfaces are the gateways for their networks.
-6. From the laptop open https://10.0.3.1 (login admin / pfsense) and run the wizard: hostname `fw01`, domain `lab.local`, **set a strong admin password now**, and untick **Block RFC1918 private networks** on WAN (your NAT network is private, so the default would block your own internet).
+6. From the laptop open https://10.0.3.1 (login admin / pfsense) and run the wizard: hostname `fw01`, domain `lab.home.arpa`, **set a strong admin password now**, and untick **Block RFC1918 private networks** on WAN (your NAT network is private, so the default would block your own internet).
 7. Interfaces menu: rename LAN to `ENDPOINTS`, OPT1 to `SECURITY`, OPT2 to `DMZ`, tick Enable on each, Save, Apply.
 
 Check: https://10.0.3.1 loads from the laptop, and `ping 10.0.3.1` works.
@@ -49,7 +49,7 @@ Check: from web01 later, `nc -zv 10.0.1.10 22` must fail while `nc -zv 10.0.1.10
 
 ## Step C: DNS, time and log forwarding (SCRUM-42)
 
-* **DNS Resolver:** enable on all interfaces, add host overrides `wazuh01`, `web01`, `fw01` in `lab.local`, and under Advanced tick **Log Queries**. DNS logs show malware calling home and are a favorite detection source.
+* **DNS Resolver:** enable on all interfaces, add host overrides `wazuh01`, `web01`, `fw01` in `lab.home.arpa`, and under Advanced tick **Log Queries**. DNS logs show malware calling home and are a favorite detection source.
 * **NTP:** enable on all interfaces. Correct time on every machine is what lets you line up events from different logs during an investigation.
 * **Remote logging** (Status > System Logs > Settings): tick *Send log messages to remote syslog server*, source address `SECURITY`, server `10.0.1.10:514`, contents **Everything**, default BSD format.
 * Take a backup: Diagnostics > Backup & Restore > Download configuration. Keep it private: it contains secrets. Only a sanitized copy ever goes in the repo (`pfsense/`).

@@ -24,7 +24,7 @@ network:
       dhcp4: false
       addresses: [${IP_ADDR}]
       routes: [{to: default, via: ${GATEWAY}}]
-      nameservers: {addresses: [${DNS}], search: [lab.local]}
+      nameservers: {addresses: [${DNS}], search: [lab.home.arpa]}
 NET
 chmod 600 /etc/netplan/60-lab.yaml
 rm -f /etc/netplan/50-cloud-init.yaml
