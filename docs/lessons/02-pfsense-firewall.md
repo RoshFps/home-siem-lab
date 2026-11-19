@@ -31,7 +31,7 @@ Check: https://10.0.3.1 loads from the laptop, and `ping 10.0.3.1` works.
 
 ## Step B: aliases and rules (SCRUM-57)
 
-Firewall > Aliases: `WAZUH` = 10.0.1.10, `WEB` = 10.0.2.20, `LAB_NETS` = 10.0.0.0/16.
+Firewall > Aliases: `WAZUH` = 10.0.1.10, `WEB` = 10.0.2.20, `LAB_NETS` = 10.0.0.0/16, `PRIVATE_NETS` = 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 (all private ranges, which includes your home network).
 
 Firewall > Rules. Delete the default allow-all rules, keep the anti-lockout rule (it protects your own access to the web UI), and tick **Log packets** on every rule. Add:
 
@@ -41,7 +41,7 @@ Firewall > Rules. Delete the default allow-all rules, keep the anti-lockout rule
 | ENDPOINTS | TCP | WEB | 80, 443, 22 | Browse and administer web01 |
 | DMZ | TCP | WAZUH | 1514, 1515 | web01 agent only; no dashboard, no SSH into the SIEM |
 | DMZ, SECURITY | UDP | This firewall | 53, 123 | DNS and time |
-| DMZ, SECURITY | TCP | NOT LAB_NETS | 80, 443 | Package updates from the internet, never into other zones |
+| DMZ, SECURITY | TCP | NOT PRIVATE_NETS | 80, 443 | Package updates from the real internet only. Never into the lab, and never into your home network |
 
 Read the table as the security argument: a compromised web01 can send logs to Wazuh and fetch updates, nothing more. Every blocked attempt is logged.
 
@@ -53,6 +53,13 @@ Check: from web01 later, `nc -zv 10.0.1.10 22` must fail while `nc -zv 10.0.1.10
 * **NTP:** enable on all interfaces. Correct time on every machine is what lets you line up events from different logs during an investigation.
 * **Remote logging** (Status > System Logs > Settings): tick *Send log messages to remote syslog server*, source address `SECURITY`, server `10.0.1.10:514`, contents **Everything**, default BSD format.
 * Take a backup: Diagnostics > Backup & Restore > Download configuration. Keep it private: it contains secrets. Only a sanitized copy ever goes in the repo (`pfsense/`).
+
+## Keeping the lab away from your home network
+
+VMware's NAT lets a VM reach anything your laptop can reach, which includes your router and the other devices at home. pfSense's WAN sits on that NAT, so the rule above, with destination `NOT PRIVATE_NETS`, is what stops a lab machine from talking to your home devices. If the lab ever contains attack tools or malware tests (SIEM 4.1), this rule is the safety wall. Also:
+* Never put a lab VM on a **Bridged** network adapter. Bridged puts it directly on your home network.
+* Check your home network's address range (`ipconfig`, look for your Wi-Fi adapter). If it starts with 10.0., the lab's 10.0.x.x addresses clash with it. Tell me and I will move the lab to another range.
+* The lab route (`10.0.0.0/16 via 10.0.3.1`) only matters for lab addresses, so it must never overlap your home range.
 
 ## Common mistakes
 * Adapter order wrong, so WAN lands on the wrong network. Fix by re-assigning by MAC.
@@ -66,7 +73,7 @@ Check: from web01 later, `nc -zv 10.0.1.10 22` must fail while `nc -zv 10.0.1.10
 
 ## Quiz yourself
 1. Why are rules evaluated on the entry interface?
-2. What breaks if you forget the SECURITY to NOT LAB_NETS rule? What breaks if you make it LAB_NETS-inclusive?
+2. What breaks if you forget the SECURITY to NOT PRIVATE_NETS rule? What could happen if you wrote it as NOT LAB_NETS instead?
 3. Why is syslog over UDP 514 restricted by source IP on the manager?
 
 Next: Lesson 3, wazuh01 (`scripts/bootstrap-wazuh01.sh`) and what each dashboard screen tells you.
