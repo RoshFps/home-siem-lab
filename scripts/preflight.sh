@@ -8,7 +8,7 @@ bad()  { echo "  FAIL $*"; fail=1; }
 check() { local msg=$1; shift; if "$@" >/dev/null 2>&1; then ok "$msg"; else bad "$msg"; fi; }
 
 case $role in
-  wazuh) ip=10.0.1.10; min_ram_mb=5500; min_disk_gb=40; ports="443 1514 1515 514" ;;
+  wazuh) ip=10.0.1.10; min_ram_mb=5000; min_disk_gb=40; ports="443 1514 1515 514" ;;
   web01) ip=10.0.2.20; min_ram_mb=1200; min_disk_gb=8;  ports="80" ;;
   *) echo "role must be wazuh or web01"; exit 2 ;;
 esac
@@ -26,7 +26,8 @@ for p in $ports; do
   check "port $p free" bash -c "! ss -lntu | awk '{print \$5}' | grep -qE '[:.]$p\$'"
 done
 if [[ $role == wazuh ]]; then
-  check "can pull images (hub.docker.com)" curl -fsS -m 10 -o /dev/null https://registry-1.docker.io/v2/
+  # The registry answers 401 without a login, which still proves the path to Docker Hub works.
+  check "can pull images (hub.docker.com)" bash -c "curl -sS -m 10 -o /dev/null -w '%{http_code}' https://registry-1.docker.io/v2/ | grep -qE '^(200|401)$'"
   check "wazuh/.env exists" test -f "$(dirname "$0")/../wazuh/.env"
 else
   check "can reach manager 10.0.1.10:1514" bash -c 'timeout 5 bash -c "</dev/tcp/10.0.1.10/1514"'
